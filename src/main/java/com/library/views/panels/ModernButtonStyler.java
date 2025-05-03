@@ -9,11 +9,11 @@ public class ModernButtonStyler {
     }
 
     public static void style(JButton button, boolean active, Color highlight) {
-        button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setForeground(new Color(60, 60, 60));
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(12, 36, 12, 36));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
             @Override

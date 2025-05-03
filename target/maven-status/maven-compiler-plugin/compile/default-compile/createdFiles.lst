@@ -9,6 +9,7 @@ com/library/models/User.class
 com/library/utils/DatabaseConnection.class
 com/library/views/panels/ModernButtonStyler$1.class
 com/library/views/panels/ModernCardPanel.class
+com/library/views/LibrarianDashboard$3.class
 com/library/views/StudentDashboard.class
 com/library/views/panels/HomePanel.class
 com/library/views/SignupView.class
@@ -24,6 +25,7 @@ com/library/views/panels/StudentRecordsPanel$2.class
 com/library/utils/PasswordUtils.class
 com/library/views/LoginView$2.class
 com/library/views/StudentDashboard$3.class
+com/library/views/LibrarianDashboard$2.class
 com/library/views/panels/ModernCardPanel$2.class
 com/library/MainApplication.class
 com/library/views/LibrarianDashboard.class

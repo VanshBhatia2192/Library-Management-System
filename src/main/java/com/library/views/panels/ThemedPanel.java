@@ -48,22 +48,29 @@ public class ThemedPanel extends JPanel {
             btn.setForeground(isActive ? new Color(0, 0, 0) : new Color(60, 60, 60));
             btn.addActionListener(e -> firePropertyChange("navigate", null, nav));
             navBar.add(btn);
-            navBar.add(Box.createHorizontalStrut(10));
+            navBar.add(Box.createHorizontalStrut(6));
         }
 
         navBar.add(Box.createHorizontalGlue());
         navBar.add(new JLabel("\u25A0")); // Placeholder icon
-        navBar.add(Box.createHorizontalStrut(10));
+        navBar.add(Box.createHorizontalStrut(6));
         navBar.add(new JLabel("\u25A0")); // Placeholder icon
 
         // Add Logout button at the end
         JButton logoutBtn = new JButton("Logout");
         com.library.views.panels.ModernButtonStyler.style(logoutBtn);
         logoutBtn.addActionListener(e -> firePropertyChange("navigate", null, "Logout"));
-        navBar.add(Box.createHorizontalStrut(10));
+        navBar.add(Box.createHorizontalStrut(6));
         navBar.add(logoutBtn);
 
-        add(navBar, BorderLayout.NORTH);
+        // Make the navbar horizontally scrollable
+        JScrollPane navScroll = new JScrollPane(navBar,
+                JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        navScroll.setBorder(BorderFactory.createEmptyBorder());
+        navScroll.setPreferredSize(new Dimension(0, 70));
+
+        add(navScroll, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
     }
 }

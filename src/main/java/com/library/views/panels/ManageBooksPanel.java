@@ -51,6 +51,7 @@ public class ManageBooksPanel extends JPanel {
         };
         booksTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(booksTable);
+        scrollPane.setPreferredSize(new Dimension(800, 400)); // Set preferred size for the scroll pane
 
         // Add components to panel
         add(toolbarPanel, BorderLayout.NORTH);
@@ -237,6 +238,7 @@ public class ManageBooksPanel extends JPanel {
         JTextField authorField = new JTextField(author, 20);
         JTextField isbnField = new JTextField(isbn, 20);
         JTextField quantityField = new JTextField(String.valueOf(totalCopies), 20);
+        JTextField availableField = new JTextField(String.valueOf(availableCopies), 20);
         JComboBox<String> categoryCombo = new JComboBox<>(
                 new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography", "Children", "Comics",
                         "Mystery", "Romance", "Fantasy", "Technology", "Self-Help", "Education", "Poetry", "Art",
@@ -270,6 +272,12 @@ public class ManageBooksPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 4;
+        dialog.add(new JLabel("Available Copies:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(availableField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         dialog.add(new JLabel("Category:"), gbc);
         gbc.gridx = 1;
         dialog.add(categoryCombo, gbc);
@@ -282,6 +290,55 @@ public class ManageBooksPanel extends JPanel {
         com.library.views.panels.ModernButtonStyler.style(cancelButton);
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
+
+        // Save button logic
+        saveButton.addActionListener(e -> {
+            String newTitle = titleField.getText().trim();
+            String newAuthor = authorField.getText().trim();
+            String newIsbn = isbnField.getText().trim();
+            String newQuantityStr = quantityField.getText().trim();
+            String newAvailableStr = availableField.getText().trim();
+            String newCategory = (String) categoryCombo.getSelectedItem();
+            if (newTitle.isEmpty() || newAuthor.isEmpty() || newIsbn.isEmpty() || newQuantityStr.isEmpty()
+                    || newAvailableStr.isEmpty() || newCategory == null) {
+                JOptionPane.showMessageDialog(dialog, "Please fill in all required fields.", "Input Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            int newQuantity, newAvailable;
+            try {
+                newQuantity = Integer.parseInt(newQuantityStr);
+                newAvailable = Integer.parseInt(newAvailableStr);
+                if (newQuantity < 1 || newAvailable < 0 || newAvailable > newQuantity)
+                    throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Total Copies must be a positive integer and Available Copies must be between 0 and Total Copies.",
+                        "Input Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try (Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(
+                            "UPDATE books SET title=?, author=?, isbn=?, quantity=?, available_quantity=?, category=? WHERE id=?")) {
+                pstmt.setString(1, newTitle);
+                pstmt.setString(2, newAuthor);
+                pstmt.setString(3, newIsbn);
+                pstmt.setInt(4, newQuantity);
+                pstmt.setInt(5, newAvailable);
+                pstmt.setString(6, newCategory);
+                pstmt.setInt(7, bookId);
+                pstmt.executeUpdate();
+                JOptionPane.showMessageDialog(dialog, "Book updated successfully!", "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                loadBooks();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error updating book: " + ex.getMessage(), "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        // Cancel button logic
+        cancelButton.addActionListener(e -> dialog.dispose());
 
         gbc.gridx = 0;
         gbc.gridy = 6;
