@@ -20,31 +20,22 @@ public class ManageBooksPanel extends JPanel {
     }
 
     private void initializeComponents() {
-        // Create toolbar panel
-        JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        
-        // Search components
+        // Initialize components first
         searchField = new JTextField(20);
         searchButton = new JButton("Search");
-        categoryFilter = new JComboBox<>(new String[]{"All Categories", "Fiction", "Non-Fiction", "Science", "History", "Biography"});
-        
-        // Action buttons
+        categoryFilter = new JComboBox<>(
+                new String[] { "All Categories", "Fiction", "Non-Fiction", "Science", "History", "Biography" });
         addButton = new JButton("Add Book");
         editButton = new JButton("Edit Book");
         deleteButton = new JButton("Delete Book");
-
-        // Add components to toolbar
-        toolbarPanel.add(new JLabel("Search:"));
-        toolbarPanel.add(searchField);
-        toolbarPanel.add(searchButton);
-        toolbarPanel.add(new JLabel("Category:"));
-        toolbarPanel.add(categoryFilter);
-        toolbarPanel.add(addButton);
-        toolbarPanel.add(editButton);
-        toolbarPanel.add(deleteButton);
+        // Modern search/action bar
+        JPanel toolbarPanel = new com.library.views.panels.ModernSearchPanel(
+                new JLabel("Search:"), searchField, searchButton,
+                new JLabel("Category:"), categoryFilter,
+                addButton, editButton, deleteButton);
 
         // Create table
-        String[] columns = {"ID", "Title", "Author", "ISBN", "Category", "Available Copies", "Total Copies"};
+        String[] columns = { "ID", "Title", "Author", "ISBN", "Category", "Available Copies", "Total Copies" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -69,26 +60,26 @@ public class ManageBooksPanel extends JPanel {
     private void loadBooks() {
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
-            
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+
             while (rs.next()) {
                 Object[] row = {
-                    rs.getInt("id"),
-                    rs.getString("title"),
-                    rs.getString("author"),
-                    rs.getString("isbn"),
-                    rs.getString("category"),
-                    rs.getInt("available_quantity"),
-                    rs.getInt("quantity")
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getString("isbn"),
+                        rs.getString("category"),
+                        rs.getInt("available_quantity"),
+                        rs.getInt("quantity")
                 };
                 tableModel.addRow(row);
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
-                "Error loading books: " + ex.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error loading books: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -105,35 +96,42 @@ public class ManageBooksPanel extends JPanel {
         JTextField isbnField = new JTextField(20);
         JTextField publisherField = new JTextField(20);
         JTextField quantityField = new JTextField(20);
-        JComboBox<String> categoryCombo = new JComboBox<>(new String[]{"Fiction", "Non-Fiction", "Science", "History", "Biography"});
+        JComboBox<String> categoryCombo = new JComboBox<>(
+                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography" });
 
         // Add components to dialog
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         dialog.add(new JLabel("Title:"), gbc);
         gbc.gridx = 1;
         dialog.add(titleField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         dialog.add(new JLabel("Author:"), gbc);
         gbc.gridx = 1;
         dialog.add(authorField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         dialog.add(new JLabel("ISBN:"), gbc);
         gbc.gridx = 1;
         dialog.add(isbnField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         dialog.add(new JLabel("Publisher:"), gbc);
         gbc.gridx = 1;
         dialog.add(publisherField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         dialog.add(new JLabel("Quantity:"), gbc);
         gbc.gridx = 1;
         dialog.add(quantityField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         dialog.add(new JLabel("Category:"), gbc);
         gbc.gridx = 1;
         dialog.add(categoryCombo, gbc);
@@ -147,10 +145,10 @@ public class ManageBooksPanel extends JPanel {
             try {
                 int quantity = Integer.parseInt(quantityField.getText());
                 String sql = "INSERT INTO books (title, author, isbn, publisher, quantity, available_quantity, category) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                
+
                 try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    
+                        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
                     pstmt.setString(1, titleField.getText());
                     pstmt.setString(2, authorField.getText());
                     pstmt.setString(3, isbnField.getText());
@@ -158,7 +156,7 @@ public class ManageBooksPanel extends JPanel {
                     pstmt.setInt(5, quantity);
                     pstmt.setInt(6, quantity);
                     pstmt.setString(7, (String) categoryCombo.getSelectedItem());
-                    
+
                     pstmt.executeUpdate();
                     JOptionPane.showMessageDialog(dialog, "Book added successfully!");
                     dialog.dispose();
@@ -176,7 +174,8 @@ public class ManageBooksPanel extends JPanel {
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
 
-        gbc.gridx = 0; gbc.gridy = 6;
+        gbc.gridx = 0;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         dialog.add(buttonPanel, gbc);
 
@@ -212,31 +211,37 @@ public class ManageBooksPanel extends JPanel {
         JTextField authorField = new JTextField(author, 20);
         JTextField isbnField = new JTextField(isbn, 20);
         JTextField quantityField = new JTextField(String.valueOf(totalCopies), 20);
-        JComboBox<String> categoryCombo = new JComboBox<>(new String[]{"Fiction", "Non-Fiction", "Science", "History", "Biography"});
+        JComboBox<String> categoryCombo = new JComboBox<>(
+                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography" });
         categoryCombo.setSelectedItem(category);
 
         // Add components to dialog
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         dialog.add(new JLabel("Title:"), gbc);
         gbc.gridx = 1;
         dialog.add(titleField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         dialog.add(new JLabel("Author:"), gbc);
         gbc.gridx = 1;
         dialog.add(authorField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         dialog.add(new JLabel("ISBN:"), gbc);
         gbc.gridx = 1;
         dialog.add(isbnField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         dialog.add(new JLabel("Total Copies:"), gbc);
         gbc.gridx = 1;
         dialog.add(quantityField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         dialog.add(new JLabel("Category:"), gbc);
         gbc.gridx = 1;
         dialog.add(categoryCombo, gbc);
@@ -250,12 +255,12 @@ public class ManageBooksPanel extends JPanel {
             try {
                 int newQuantity = Integer.parseInt(quantityField.getText());
                 int difference = newQuantity - totalCopies;
-                
+
                 String sql = "UPDATE books SET title=?, author=?, isbn=?, quantity=?, available_quantity=available_quantity+?, category=? WHERE id=?";
-                
+
                 try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    
+                        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
                     pstmt.setString(1, titleField.getText());
                     pstmt.setString(2, authorField.getText());
                     pstmt.setString(3, isbnField.getText());
@@ -263,7 +268,7 @@ public class ManageBooksPanel extends JPanel {
                     pstmt.setInt(5, difference);
                     pstmt.setString(6, (String) categoryCombo.getSelectedItem());
                     pstmt.setInt(7, bookId);
-                    
+
                     pstmt.executeUpdate();
                     JOptionPane.showMessageDialog(dialog, "Book updated successfully!");
                     dialog.dispose();
@@ -281,7 +286,8 @@ public class ManageBooksPanel extends JPanel {
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
 
-        gbc.gridx = 0; gbc.gridy = 6;
+        gbc.gridx = 0;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         dialog.add(buttonPanel, gbc);
 
@@ -301,24 +307,24 @@ public class ManageBooksPanel extends JPanel {
         String title = (String) tableModel.getValueAt(selectedRow, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Are you sure you want to delete the book '" + title + "'?",
-            "Confirm Delete",
-            JOptionPane.YES_NO_OPTION);
+                "Are you sure you want to delete the book '" + title + "'?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement("DELETE FROM books WHERE id = ?")) {
-                
+                    PreparedStatement pstmt = conn.prepareStatement("DELETE FROM books WHERE id = ?")) {
+
                 pstmt.setInt(1, bookId);
                 pstmt.executeUpdate();
-                
+
                 JOptionPane.showMessageDialog(this, "Book deleted successfully!");
                 loadBooks();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Error deleting book: " + ex.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Error deleting book: " + ex.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -326,43 +332,43 @@ public class ManageBooksPanel extends JPanel {
     private void searchBooks() {
         String searchTerm = searchField.getText().trim();
         String selectedCategory = (String) categoryFilter.getSelectedItem();
-        
+
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
             StringBuilder sql = new StringBuilder("SELECT * FROM books WHERE 1=1");
-            
+
             if (!searchTerm.isEmpty()) {
                 sql.append(" AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)");
             }
-            
+
             if (!selectedCategory.equals("All Categories")) {
                 sql.append(" AND category = ?");
             }
-            
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
-                
+
                 if (!searchTerm.isEmpty()) {
                     String searchPattern = "%" + searchTerm + "%";
                     pstmt.setString(paramIndex++, searchPattern);
                     pstmt.setString(paramIndex++, searchPattern);
                     pstmt.setString(paramIndex++, searchPattern);
                 }
-                
+
                 if (!selectedCategory.equals("All Categories")) {
                     pstmt.setString(paramIndex, selectedCategory);
                 }
-                
+
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
                         Object[] row = {
-                            rs.getInt("id"),
-                            rs.getString("title"),
-                            rs.getString("author"),
-                            rs.getString("isbn"),
-                            rs.getString("category"),
-                            rs.getInt("available_quantity"),
-                            rs.getInt("quantity")
+                                rs.getInt("id"),
+                                rs.getString("title"),
+                                rs.getString("author"),
+                                rs.getString("isbn"),
+                                rs.getString("category"),
+                                rs.getInt("available_quantity"),
+                                rs.getInt("quantity")
                         };
                         tableModel.addRow(row);
                     }
@@ -370,13 +376,13 @@ public class ManageBooksPanel extends JPanel {
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
-                "Error searching books: " + ex.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error searching books: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void filterByCategory() {
         searchBooks();
     }
-} 
+}

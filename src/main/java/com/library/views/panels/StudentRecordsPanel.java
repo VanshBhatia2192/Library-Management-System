@@ -26,23 +26,18 @@ public class StudentRecordsPanel extends JPanel {
     }
 
     private void initializeComponents() {
-        // Create top panel for search
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // Initialize components first
         searchField = new JTextField(20);
         searchButton = new JButton("Search");
         studentInfoLabel = new JLabel("Search by student ID or name");
         overdueStatusLabel = new JLabel("");
         bookLimitLabel = new JLabel("");
-        
-        topPanel.add(new JLabel("Search:"));
-        topPanel.add(searchField);
-        topPanel.add(searchButton);
-        topPanel.add(studentInfoLabel);
-        topPanel.add(overdueStatusLabel);
-        topPanel.add(bookLimitLabel);
+        // Modern search bar
+        JPanel topPanel = new com.library.views.panels.ModernSearchPanel(
+                new JLabel("Search:"), searchField, searchButton, studentInfoLabel, overdueStatusLabel, bookLimitLabel);
 
         // Create students table
-        String[] columns = {"ID", "Name", "Email", "Status"};
+        String[] columns = { "ID", "Name", "Email", "Status" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -62,7 +57,7 @@ public class StudentRecordsPanel extends JPanel {
         });
 
         // Create borrowed books table
-        String[] borrowedColumns = {"Book Title", "Borrow Date", "Due Date", "Status"};
+        String[] borrowedColumns = { "Book Title", "Borrow Date", "Due Date", "Status" };
         borrowedBooksModel = new DefaultTableModel(borrowedColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -73,8 +68,8 @@ public class StudentRecordsPanel extends JPanel {
 
         // Create split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-            new JScrollPane(studentsTable),
-            new JScrollPane(borrowedBooksTable));
+                new JScrollPane(studentsTable),
+                new JScrollPane(borrowedBooksTable));
         splitPane.setResizeWeight(0.5);
 
         // Add components to panel
@@ -88,67 +83,67 @@ public class StudentRecordsPanel extends JPanel {
     private void loadStudents() {
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                 "SELECT id, full_name, email, is_active FROM users WHERE role = 'STUDENT'")) {
-            
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT id, full_name, email, is_active FROM users WHERE role = 'STUDENT'")) {
+
             while (rs.next()) {
                 Object[] row = {
-                    rs.getInt("id"),
-                    rs.getString("full_name"),
-                    rs.getString("email"),
-                    rs.getBoolean("is_active") ? "Active" : "Inactive"
+                        rs.getInt("id"),
+                        rs.getString("full_name"),
+                        rs.getString("email"),
+                        rs.getBoolean("is_active") ? "Active" : "Inactive"
                 };
                 tableModel.addRow(row);
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
-                "Error loading students: " + ex.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error loading students: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void searchStudents() {
         String searchTerm = searchField.getText().trim();
         tableModel.setRowCount(0);
-        
+
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                 "SELECT id, full_name, email, is_active FROM users " +
-                 "WHERE role = 'STUDENT' AND (id LIKE ? OR full_name LIKE ? OR email LIKE ?)")) {
-            
+                PreparedStatement pstmt = conn.prepareStatement(
+                        "SELECT id, full_name, email, is_active FROM users " +
+                                "WHERE role = 'STUDENT' AND (id LIKE ? OR full_name LIKE ? OR email LIKE ?)")) {
+
             String searchPattern = "%" + searchTerm + "%";
             pstmt.setString(1, searchPattern);
             pstmt.setString(2, searchPattern);
             pstmt.setString(3, searchPattern);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Object[] row = {
-                        rs.getInt("id"),
-                        rs.getString("full_name"),
-                        rs.getString("email"),
-                        rs.getBoolean("is_active") ? "Active" : "Inactive"
+                            rs.getInt("id"),
+                            rs.getString("full_name"),
+                            rs.getString("email"),
+                            rs.getBoolean("is_active") ? "Active" : "Inactive"
                     };
                     tableModel.addRow(row);
                 }
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
-                "Error searching students: " + ex.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error searching students: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void showStudentDetails(int studentId) {
         borrowedBooksModel.setRowCount(0);
-        
+
         try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
             // Get student info
             try (PreparedStatement pstmt = conn.prepareStatement(
-                "SELECT full_name, email FROM users WHERE id = ?")) {
+                    "SELECT full_name, email FROM users WHERE id = ?")) {
                 pstmt.setInt(1, studentId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
@@ -161,18 +156,18 @@ public class StudentRecordsPanel extends JPanel {
 
             // Get borrowed books
             try (PreparedStatement pstmt = conn.prepareStatement(
-                "SELECT b.title, bt.borrow_date, bt.due_date, bt.status " +
-                "FROM book_transactions bt " +
-                "JOIN books b ON bt.book_id = b.id " +
-                "WHERE bt.user_id = ? AND bt.status IN ('BORROWED', 'OVERDUE')")) {
+                    "SELECT b.title, bt.borrow_date, bt.due_date, bt.status " +
+                            "FROM book_transactions bt " +
+                            "JOIN books b ON bt.book_id = b.id " +
+                            "WHERE bt.user_id = ? AND bt.status IN ('BORROWED', 'OVERDUE')")) {
                 pstmt.setInt(1, studentId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
                         Object[] row = {
-                            rs.getString("title"),
-                            rs.getDate("borrow_date"),
-                            rs.getDate("due_date"),
-                            rs.getString("status")
+                                rs.getString("title"),
+                                rs.getDate("borrow_date"),
+                                rs.getDate("due_date"),
+                                rs.getString("status")
                         };
                         borrowedBooksModel.addRow(row);
                     }
@@ -181,8 +176,8 @@ public class StudentRecordsPanel extends JPanel {
 
             // Check overdue status
             try (PreparedStatement pstmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM book_transactions " +
-                "WHERE user_id = ? AND status = 'OVERDUE'")) {
+                    "SELECT COUNT(*) FROM book_transactions " +
+                            "WHERE user_id = ? AND status = 'OVERDUE'")) {
                 pstmt.setInt(1, studentId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
@@ -195,8 +190,8 @@ public class StudentRecordsPanel extends JPanel {
 
             // Check book limit
             try (PreparedStatement pstmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM book_transactions " +
-                "WHERE user_id = ? AND status = 'BORROWED'")) {
+                    "SELECT COUNT(*) FROM book_transactions " +
+                            "WHERE user_id = ? AND status = 'BORROWED'")) {
                 pstmt.setInt(1, studentId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
@@ -209,9 +204,9 @@ public class StudentRecordsPanel extends JPanel {
 
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
-                "Error loading student details: " + ex.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error loading student details: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
-} 
+}

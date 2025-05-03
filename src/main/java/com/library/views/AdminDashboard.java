@@ -9,113 +9,168 @@ public class AdminDashboard extends BaseDashboard {
     private JButton fineManagementButton;
     private JButton userManagementButton;
 
+    private static final String[] NAV_ITEMS = { "Manage Librarians", "Reports", "Fine Mgmt", "User Mgmt", "Profile" };
+
     public AdminDashboard(String currentUser) {
         super("Admin Dashboard - Library Management System", currentUser, "ADMIN");
+        showHomePanel();
     }
 
     @Override
     protected JPanel createSidebar() {
-        JPanel sidebar = new JPanel();
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
-        sidebar.setBackground(new Color(51, 51, 51));
-        sidebar.setPreferredSize(new Dimension(220, 0));
-
-        // Create buttons
-        manageLibrariansButton = createMenuButton("Manage Librarians");
-        viewReportsButton = createMenuButton("View Reports");
-        fineManagementButton = createMenuButton("Fine Management");
-        userManagementButton = createMenuButton("User Management");
-        logoutButton = createMenuButton("Logout");
-
-        // Style buttons
-        Color buttonColor = new Color(70, 70, 70);
-        Color textColor = Color.WHITE;
-        Font buttonFont = new Font("Arial", Font.PLAIN, 14);
-
-        for (JButton button : new JButton[]{manageLibrariansButton, viewReportsButton, 
-                fineManagementButton, userManagementButton, logoutButton}) {
-            button.setBackground(buttonColor);
-            button.setForeground(textColor);
-            button.setFont(buttonFont);
-            button.setBorderPainted(false);
-            button.setFocusPainted(false);
-            button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            button.addActionListener(e -> handleButtonClick(button));
-            sidebar.add(button);
-            sidebar.add(Box.createVerticalStrut(10));
-        }
-
-        // Add some space at the bottom
-        sidebar.add(Box.createVerticalGlue());
-
-        return sidebar;
+        return new JPanel(); // No sidebar
     }
 
-    private void handleButtonClick(JButton button) {
-        if (button == manageLibrariansButton) {
-            showManageLibrariansPanel();
-        } else if (button == viewReportsButton) {
-            showReportsPanel();
-        } else if (button == fineManagementButton) {
-            showFineManagementPanel();
-        } else if (button == userManagementButton) {
-            showUserManagementPanel();
-        } else if (button == logoutButton) {
-            handleLogout();
+    private void showHomePanel() {
+        com.library.views.panels.HomePanel homePanel = new com.library.views.panels.HomePanel("ADMIN");
+        homePanel.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(homePanel);
+    }
+
+    private void handleNav(String nav) {
+        switch (nav) {
+            case "Manage Librarians":
+                showManageLibrariansPanel();
+                break;
+            case "Reports":
+                showReportsPanel();
+                break;
+            case "Fine Mgmt":
+                showFineManagementPanel();
+                break;
+            case "User Mgmt":
+                showUserManagementPanel();
+                break;
+            case "Profile":
+                showProfilePanel();
+                break;
+            case "GoBack":
+                showHomePanel();
+                break;
         }
     }
 
     private void showManageLibrariansPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createHeaderPanel("Manage Librarians"), BorderLayout.NORTH);
-        
-        // TODO: Implement librarian management functionality
+        JPanel panel = createManageLibrariansPanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "ADMIN", NAV_ITEMS, "Manage Librarians", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createManageLibrariansPanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        JLabel heading = new JLabel("Manage Librarians");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
         JLabel label = new JLabel("Librarian Management Panel - Coming Soon");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
-        
-        showContent(panel);
+        inner.add(label, BorderLayout.CENTER);
+        return new com.library.views.panels.ModernCardPanel(inner);
     }
 
     private void showReportsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createHeaderPanel("View Reports"), BorderLayout.NORTH);
-        
-        // TODO: Implement reports functionality
+        JPanel panel = createReportsPanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "ADMIN", NAV_ITEMS, "Reports", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createReportsPanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        JLabel heading = new JLabel("View Reports");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
         JLabel label = new JLabel("Reports Panel - Coming Soon");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
-        
-        showContent(panel);
+        inner.add(label, BorderLayout.CENTER);
+        return new com.library.views.panels.ModernCardPanel(inner);
     }
 
     private void showFineManagementPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createHeaderPanel("Fine Management"), BorderLayout.NORTH);
-        
-        // TODO: Implement fine management functionality
+        JPanel panel = createFineManagementPanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "ADMIN", NAV_ITEMS, "Fine Mgmt", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createFineManagementPanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        JLabel heading = new JLabel("Fine Management");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
         JLabel label = new JLabel("Fine Management Panel - Coming Soon");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
-        
-        showContent(panel);
+        inner.add(label, BorderLayout.CENTER);
+        return new com.library.views.panels.ModernCardPanel(inner);
     }
 
     private void showUserManagementPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createHeaderPanel("User Management"), BorderLayout.NORTH);
-        
-        // TODO: Implement user management functionality
+        JPanel panel = createUserManagementPanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "ADMIN", NAV_ITEMS, "User Mgmt", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createUserManagementPanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        JLabel heading = new JLabel("User Management");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
         JLabel label = new JLabel("User Management Panel - Coming Soon");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
-        
-        showContent(panel);
+        inner.add(label, BorderLayout.CENTER);
+        return new com.library.views.panels.ModernCardPanel(inner);
+    }
+
+    private void showProfilePanel() {
+        JPanel panel = createProfilePanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "ADMIN", NAV_ITEMS, "Profile", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createProfilePanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        JLabel heading = new JLabel("Edit Profile");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
+        JLabel label = new JLabel("Profile editing coming soon.", SwingConstants.CENTER);
+        inner.add(label, BorderLayout.CENTER);
+        return new com.library.views.panels.ModernCardPanel(inner);
     }
 
     @Override
     protected void cleanup() {
         // TODO: Implement cleanup logic
     }
-} 
+}
