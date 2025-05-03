@@ -28,6 +28,7 @@ com/library/views/StudentDashboard$3.class
 com/library/views/LibrarianDashboard$2.class
 com/library/views/panels/ModernCardPanel$2.class
 com/library/MainApplication.class
+com/library/views/panels/ModernSearchPanel$2.class
 com/library/views/LibrarianDashboard.class
 com/library/views/panels/ThemedPanel.class
 com/library/views/SignupView$2.class

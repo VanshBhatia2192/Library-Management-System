@@ -5,9 +5,6 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -46,7 +43,7 @@ public class DatabaseConnection {
             // Initialize connection pool
             this.connectionPool = new ArrayBlockingQueue<>(poolSize);
             initializePool();
-            ensureTablesExist();
+            // ensureTablesExist();
         } catch (IOException e) {
             System.err.println("Error loading database configuration: " + e.getMessage());
             e.printStackTrace();
@@ -136,68 +133,73 @@ public class DatabaseConnection {
     /**
      * Checks if the main tables exist, and if not, creates them using schema.sql
      */
-    private void ensureTablesExist() {
-        String[] mainTables = { "users", "books", "genres", "book_genre", "book_requests", "fines", "hold_requests",
-                "transactions" };
-        try (Connection conn = getConnection()) {
-            boolean missing = false;
-            for (String table : mainTables) {
-                try (Statement stmt = conn.createStatement()) {
-                    stmt.executeQuery("SELECT 1 FROM " + table + " LIMIT 1");
-                } catch (SQLException e) {
-                    missing = true;
-                    break;
-                }
-            }
-            if (missing) {
-                System.out.println("Some tables are missing. Creating tables from schema.sql...");
-                runSchemaSQL(conn);
-            } else {
-                System.out.println("All main tables exist. No need to create tables.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error checking/creating tables: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+    // private void ensureTablesExist() {
+    // String[] mainTables = { "users", "books", "genres", "book_genre",
+    // "book_requests", "fines", "hold_requests",
+    // "transactions" };
+    // try (Connection conn = getConnection()) {
+    // boolean missing = false;
+    // for (String table : mainTables) {
+    // try (Statement stmt = conn.createStatement()) {
+    // stmt.executeQuery("SELECT 1 FROM " + table + " LIMIT 1");
+    // } catch (SQLException e) {
+    // missing = true;
+    // break;
+    // }
+    // }
+    // if (missing) {
+    // System.out.println("Some tables are missing. Creating tables from
+    // schema.sql...");
+    // runSchemaSQL(conn);
+    // } else {
+    // System.out.println("All main tables exist. No need to create tables.");
+    // }
+    // } catch (Exception e) {
+    // System.err.println("Error checking/creating tables: " + e.getMessage());
+    // e.printStackTrace();
+    // }
+    // }
 
-    /**
-     * Reads and executes all CREATE TABLE statements from resources/sql/schema.sql
-     */
-    private void runSchemaSQL(Connection conn) {
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream("sql/schema.sql")) {
-            if (in == null) {
-                System.err.println("schema.sql not found in resources/sql/");
-                return;
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            StringBuilder statement = new StringBuilder();
-            String line;
-            boolean inCreate = false;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("CREATE TABLE")) {
-                    inCreate = true;
-                    statement.setLength(0);
-                }
-                if (inCreate) {
-                    statement.append(line).append(" ");
-                    if (line.endsWith(";")) {
-                        // Execute the CREATE TABLE statement
-                        try (Statement stmt = conn.createStatement()) {
-                            stmt.execute(statement.toString());
-                            System.out.println("Executed: "
-                                    + statement.toString().substring(0, Math.min(60, statement.length())) + "...");
-                        } catch (SQLException e) {
-                            System.err.println("Error executing statement: " + e.getMessage());
-                        }
-                        inCreate = false;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error running schema.sql: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+    // /**
+    // * Reads and executes all CREATE TABLE statements from
+    // resources/sql/schema.sql
+    // */
+    // private void runSchemaSQL(Connection conn) {
+    // try (InputStream in =
+    // getClass().getClassLoader().getResourceAsStream("sql/schema.sql")) {
+    // if (in == null) {
+    // System.err.println("schema.sql not found in resources/sql/");
+    // return;
+    // }
+    // BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+    // StringBuilder statement = new StringBuilder();
+    // String line;
+    // boolean inCreate = false;
+    // while ((line = reader.readLine()) != null) {
+    // line = line.trim();
+    // if (line.startsWith("CREATE TABLE")) {
+    // inCreate = true;
+    // statement.setLength(0);
+    // }
+    // if (inCreate) {
+    // statement.append(line).append(" ");
+    // if (line.endsWith(";")) {
+    // // Execute the CREATE TABLE statement
+    // try (Statement stmt = conn.createStatement()) {
+    // stmt.execute(statement.toString());
+    // System.out.println("Executed: "
+    // + statement.toString().substring(0, Math.min(60, statement.length())) +
+    // "...");
+    // } catch (SQLException e) {
+    // System.err.println("Error executing statement: " + e.getMessage());
+    // }
+    // inCreate = false;
+    // }
+    // }
+    // }
+    // } catch (Exception e) {
+    // System.err.println("Error running schema.sql: " + e.getMessage());
+    // e.printStackTrace();
+    // }
+    // }
 }
