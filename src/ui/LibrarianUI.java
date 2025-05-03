@@ -4,6 +4,7 @@ import model.Book;
 import model.BookIssue;
 import model.Student;
 import service.LibrarianService;
+import config.DatabaseConfig;
 import java.util.List;
 import java.util.Scanner;
 
@@ -37,6 +38,7 @@ public class LibrarianUI {
         System.out.println("8. View All Students");
         System.out.println("9. View Overdue Books");
         System.out.println("10. Generate Overdue Notifications");
+        System.out.println("11. Change Database Password");
         System.out.println("0. Logout");
     }
 
@@ -71,6 +73,9 @@ public class LibrarianUI {
                 break;
             case 10:
                 generateOverdueNotifications();
+                break;
+            case 11:
+                changeDatabasePassword();
                 break;
             case 0:
                 System.out.println("Logging out...");
@@ -198,6 +203,30 @@ public class LibrarianUI {
         } else {
             notifications.forEach(System.out::println);
         }
+    }
+
+    private void changeDatabasePassword() {
+        System.out.println("\n=== Change Database Password ===");
+        System.out.print("Enter current password: ");
+        String currentPassword = scanner.nextLine();
+        
+        if (!currentPassword.equals(DatabaseConfig.getPassword())) {
+            System.out.println("Current password is incorrect!");
+            return;
+        }
+
+        System.out.print("Enter new password: ");
+        String newPassword = scanner.nextLine();
+        System.out.print("Confirm new password: ");
+        String confirmPassword = scanner.nextLine();
+
+        if (!newPassword.equals(confirmPassword)) {
+            System.out.println("New passwords do not match!");
+            return;
+        }
+
+        DatabaseConfig.changePassword(newPassword);
+        System.out.println("Database password changed successfully!");
     }
 
     private int getIntInput(String prompt) {

@@ -12,7 +12,7 @@ public class StudentDashboard extends BaseDashboard {
     private JButton reissueBooksButton;
     private JButton notificationsButton;
 
-    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Request", "Status", "Notifications", "Profile" };
+    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications", "Profile" };
 
     public StudentDashboard(String currentUser) {
         super("Student Dashboard - Library Management System", currentUser, "STUDENT");
@@ -53,6 +53,9 @@ public class StudentDashboard extends BaseDashboard {
                 break;
             case "Profile":
                 showProfilePanel();
+                break;
+            case "Reissue":
+                showReissueBooksPanel();
                 break;
             case "GoBack":
                 showHomePanel();
@@ -458,18 +461,117 @@ public class StudentDashboard extends BaseDashboard {
     private JPanel createRequestNewBooksPanel() {
         JPanel inner = new JPanel(new BorderLayout());
         inner.setOpaque(false);
-        JLabel heading = new JLabel("Request New Books");
-        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
-        heading.setForeground(new Color(60, 60, 60));
-        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headingPanel.setOpaque(false);
-        headingPanel.add(heading);
-        inner.add(headingPanel, BorderLayout.NORTH);
 
-        // TODO: Implement new book request functionality
-        JLabel label = new JLabel("New Book Request Panel - Coming Soon");
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        inner.add(label, BorderLayout.CENTER);
+        // Create form panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Book Name field
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        JLabel bookNameLabel = new JLabel("Book Name:");
+        bookNameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        formPanel.add(bookNameLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField bookNameField = new JTextField(20);
+        bookNameField.setFont(new Font("Arial", Font.PLAIN, 14));
+        formPanel.add(bookNameField, gbc);
+
+        // Author Name field
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.0;
+        JLabel authorNameLabel = new JLabel("Author Name:");
+        authorNameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        formPanel.add(authorNameLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField authorNameField = new JTextField(20);
+        authorNameField.setFont(new Font("Arial", Font.PLAIN, 14));
+        formPanel.add(authorNameField, gbc);
+
+        // Submit button styled like the rest of the app
+        JButton submitButton = new JButton("Submit Request");
+        submitButton.setFont(new Font("Arial", Font.BOLD, 16));
+        submitButton.setBackground(new Color(34, 87, 126));
+        submitButton.setForeground(new Color(30, 30, 30));
+        submitButton.setFocusPainted(false);
+        submitButton.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+
+        // Place the button in a ModernSearchPanel for consistent look
+        JPanel buttonPanel = new com.library.views.panels.ModernSearchPanel(submitButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        inner.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add form panel to a wrapper panel for centering
+        JPanel wrapperPanel = new JPanel(new GridBagLayout());
+        wrapperPanel.setOpaque(false);
+        wrapperPanel.add(formPanel);
+        inner.add(wrapperPanel, BorderLayout.CENTER);
+
+        // Add submit button action
+        submitButton.addActionListener(e -> {
+            String bookName = bookNameField.getText().trim();
+            String authorName = authorNameField.getText().trim();
+
+            if (bookName.isEmpty() || authorName.isEmpty()) {
+                JOptionPane.showMessageDialog(inner,
+                        "Please fill in both book name and author name.",
+                        "Incomplete Information",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
+                // Get user id from username
+                int userId = -1;
+                try (java.sql.PreparedStatement userStmt = conn
+                        .prepareStatement("SELECT id FROM users WHERE username = ?")) {
+                    userStmt.setString(1, currentUser);
+                    try (java.sql.ResultSet rs = userStmt.executeQuery()) {
+                        if (rs.next()) {
+                            userId = rs.getInt("id");
+                        }
+                    }
+                }
+
+                if (userId == -1) {
+                    JOptionPane.showMessageDialog(inner, "User not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Insert book request with correct column names
+                try (java.sql.PreparedStatement insertStmt = conn.prepareStatement(
+                        "INSERT INTO book_requests (user_id, title, author, request_date, status) VALUES (?, ?, ?, ?, 'PENDING')")) {
+                    insertStmt.setInt(1, userId);
+                    insertStmt.setString(2, bookName);
+                    insertStmt.setString(3, authorName);
+                    insertStmt.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+                    insertStmt.executeUpdate();
+                }
+
+                JOptionPane.showMessageDialog(inner,
+                        "Book request submitted successfully! The librarian will review your request.",
+                        "Request Submitted",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                // Clear the fields
+                bookNameField.setText("");
+                authorNameField.setText("");
+
+            } catch (java.sql.SQLException ex) {
+                JOptionPane.showMessageDialog(inner,
+                        "Error submitting book request: " + ex.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         return new com.library.views.panels.ModernCardPanel(inner);
     }
@@ -509,6 +611,7 @@ public class StudentDashboard extends BaseDashboard {
         JPanel actionPanel = new com.library.views.panels.ModernSearchPanel(reissueButton);
         inner.add(actionPanel, BorderLayout.BEFORE_FIRST_LINE);
 
+        // Table for borrowed books
         String[] columns = { "Transaction ID", "Title", "Borrow Date", "Due Date", "Status", "Reissued" };
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -573,21 +676,25 @@ public class StudentDashboard extends BaseDashboard {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
             try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
-                // Extend due date by 14 days and set transaction_type to REISSUE
-                try (java.sql.PreparedStatement pstmt = conn.prepareStatement(
-                        "UPDATE book_transactions SET due_date = DATE_ADD(due_date, INTERVAL 14 DAY), transaction_type = 'REISSUE' WHERE id = ?")) {
-                    pstmt.setInt(1, transactionId);
-                    pstmt.executeUpdate();
+                // Update the transaction with new due date and reissue status
+                java.sql.Timestamp newDueDate = new java.sql.Timestamp(System.currentTimeMillis() + 14L * 24 * 60 * 60 * 1000); // 14 days
+                try (java.sql.PreparedStatement updateStmt = conn.prepareStatement(
+                        "UPDATE book_transactions SET due_date = ?, transaction_type = 'REISSUE' WHERE id = ?")) {
+                    updateStmt.setTimestamp(1, newDueDate);
+                    updateStmt.setInt(2, transactionId);
+                    updateStmt.executeUpdate();
                 }
-                JOptionPane.showMessageDialog(inner, "Book reissued successfully! Due date extended by 14 days.",
+                JOptionPane.showMessageDialog(inner, "Book has been reissued successfully. New due date: " + newDueDate,
                         "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBorrowed.run();
             } catch (java.sql.SQLException ex) {
-                JOptionPane.showMessageDialog(inner, "Error reissuing book: " + ex.getMessage(), "Database Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(inner, "Error reissuing book: " + ex.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
         return new com.library.views.panels.ModernCardPanel(inner);
     }
 
@@ -621,5 +728,16 @@ public class StudentDashboard extends BaseDashboard {
     @Override
     protected void cleanup() {
         // TODO: Implement cleanup logic
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            new StudentDashboard("student"); // Default student username
+        });
     }
 }

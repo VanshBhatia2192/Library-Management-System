@@ -46,8 +46,8 @@ public class HomePanel extends JPanel {
         navBar.add(Box.createHorizontalGlue());
 
         // Navigation buttons (customize per role)
-        String[] studentNav = { "Borrow", "Return", "Request", "Status", "Notifications", "Profile" };
-        String[] librarianNav = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices", "Profile" };
+        String[] studentNav = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications", "Profile" };
+        String[] librarianNav = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices", "View Requests", "Profile" };
         String[] adminNav = { "Manage Librarians", "Reports", "Fine Mgmt", "User Mgmt", "Profile" };
         String[] navItems = userRole.equals("ADMIN") ? adminNav
                 : userRole.equals("LIBRARIAN") ? librarianNav : studentNav;
