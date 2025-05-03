@@ -47,6 +47,9 @@ public class AdminDashboard extends BaseDashboard {
             case "GoBack":
                 showHomePanel();
                 break;
+            case "Logout":
+                handleLogout();
+                break;
         }
     }
 

@@ -28,12 +28,7 @@ public class HomePanel extends JPanel {
 
         // Go Back button
         JButton goBackBtn = new JButton("← Go Back");
-        goBackBtn.setFocusPainted(false);
-        goBackBtn.setFont(new Font("Arial", Font.BOLD, 14));
-        goBackBtn.setBackground(new Color(247, 202, 220));
-        goBackBtn.setForeground(new Color(60, 60, 60));
-        goBackBtn.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-        goBackBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        com.library.views.panels.ModernButtonStyler.style(goBackBtn);
         goBackBtn.addActionListener(e -> firePropertyChange("navigate", null, "GoBack"));
         navBar.add(goBackBtn, 0);
         navBar.add(Box.createHorizontalStrut(10), 1);
@@ -53,12 +48,7 @@ public class HomePanel extends JPanel {
                 : userRole.equals("LIBRARIAN") ? librarianNav : studentNav;
         for (String nav : navItems) {
             JButton btn = new JButton(nav);
-            btn.setFocusPainted(false);
-            btn.setFont(new Font("Arial", Font.BOLD, 14));
-            btn.setBackground(new Color(247, 202, 220));
-            btn.setForeground(new Color(60, 60, 60));
-            btn.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            com.library.views.panels.ModernButtonStyler.style(btn);
             btn.addActionListener(e -> firePropertyChange("navigate", null, nav));
             navBar.add(btn);
             navBar.add(Box.createHorizontalStrut(10));
@@ -94,11 +84,7 @@ public class HomePanel extends JPanel {
 
         gbc.gridy++;
         JButton cta = new JButton("Get Started");
-        cta.setFont(new Font("Arial", Font.BOLD, 18));
-        cta.setBackground(new Color(247, 202, 220));
-        cta.setForeground(new Color(60, 60, 60));
-        cta.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-        cta.setFocusPainted(false);
+        com.library.views.panels.ModernButtonStyler.style(cta);
         centerPanel.add(cta, gbc);
 
         // Placeholders for character images

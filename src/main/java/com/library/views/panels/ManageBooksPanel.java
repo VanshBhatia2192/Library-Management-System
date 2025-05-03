@@ -24,10 +24,17 @@ public class ManageBooksPanel extends JPanel {
         searchField = new JTextField(20);
         searchButton = new JButton("Search");
         categoryFilter = new JComboBox<>(
-                new String[] { "All Categories", "Fiction", "Non-Fiction", "Science", "History", "Biography" });
+                new String[] { "All Categories", "Fiction", "Non-Fiction", "Science", "History", "Biography",
+                        "Children", "Comics", "Mystery", "Romance", "Fantasy", "Technology", "Self-Help", "Education",
+                        "Poetry", "Art", "Travel", "Health", "Religion", "Business" });
         addButton = new JButton("Add Book");
         editButton = new JButton("Edit Book");
         deleteButton = new JButton("Delete Book");
+        // Style toolbar buttons
+        com.library.views.panels.ModernButtonStyler.style(searchButton);
+        com.library.views.panels.ModernButtonStyler.style(addButton);
+        com.library.views.panels.ModernButtonStyler.style(editButton);
+        com.library.views.panels.ModernButtonStyler.style(deleteButton);
         // Modern search/action bar
         JPanel toolbarPanel = new com.library.views.panels.ModernSearchPanel(
                 new JLabel("Search:"), searchField, searchButton,
@@ -97,7 +104,9 @@ public class ManageBooksPanel extends JPanel {
         JTextField publisherField = new JTextField(20);
         JTextField quantityField = new JTextField(20);
         JComboBox<String> categoryCombo = new JComboBox<>(
-                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography" });
+                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography", "Children", "Comics",
+                        "Mystery", "Romance", "Fantasy", "Technology", "Self-Help", "Education", "Poetry", "Art",
+                        "Travel", "Health", "Religion", "Business" });
 
         // Add components to dialog
         gbc.gridx = 0;
@@ -140,39 +149,56 @@ public class ManageBooksPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
-
-        saveButton.addActionListener(e -> {
-            try {
-                int quantity = Integer.parseInt(quantityField.getText());
-                String sql = "INSERT INTO books (title, author, isbn, publisher, quantity, available_quantity, category) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-                try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                    pstmt.setString(1, titleField.getText());
-                    pstmt.setString(2, authorField.getText());
-                    pstmt.setString(3, isbnField.getText());
-                    pstmt.setString(4, publisherField.getText());
-                    pstmt.setInt(5, quantity);
-                    pstmt.setInt(6, quantity);
-                    pstmt.setString(7, (String) categoryCombo.getSelectedItem());
-
-                    pstmt.executeUpdate();
-                    JOptionPane.showMessageDialog(dialog, "Book added successfully!");
-                    dialog.dispose();
-                    loadBooks();
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Please enter a valid quantity!");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Error adding book: " + ex.getMessage());
-            }
-        });
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-
+        com.library.views.panels.ModernButtonStyler.style(saveButton);
+        com.library.views.panels.ModernButtonStyler.style(cancelButton);
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
+
+        // Save button logic
+        saveButton.addActionListener(e -> {
+            String title = titleField.getText().trim();
+            String author = authorField.getText().trim();
+            String isbn = isbnField.getText().trim();
+            String publisher = publisherField.getText().trim();
+            String quantityStr = quantityField.getText().trim();
+            String category = (String) categoryCombo.getSelectedItem();
+            if (title.isEmpty() || author.isEmpty() || isbn.isEmpty() || quantityStr.isEmpty() || category == null) {
+                JOptionPane.showMessageDialog(dialog, "Please fill in all required fields.", "Input Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            int quantity;
+            try {
+                quantity = Integer.parseInt(quantityStr);
+                if (quantity < 1)
+                    throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Quantity must be a positive integer.", "Input Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try (Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO books (title, author, isbn, publisher, quantity, available_quantity, category) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                pstmt.setString(1, title);
+                pstmt.setString(2, author);
+                pstmt.setString(3, isbn);
+                pstmt.setString(4, publisher);
+                pstmt.setInt(5, quantity);
+                pstmt.setInt(6, quantity);
+                pstmt.setString(7, category);
+                pstmt.executeUpdate();
+                JOptionPane.showMessageDialog(dialog, "Book added successfully!", "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                loadBooks();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error adding book: " + ex.getMessage(), "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        // Cancel button logic
+        cancelButton.addActionListener(e -> dialog.dispose());
 
         gbc.gridx = 0;
         gbc.gridy = 6;
@@ -212,7 +238,9 @@ public class ManageBooksPanel extends JPanel {
         JTextField isbnField = new JTextField(isbn, 20);
         JTextField quantityField = new JTextField(String.valueOf(totalCopies), 20);
         JComboBox<String> categoryCombo = new JComboBox<>(
-                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography" });
+                new String[] { "Fiction", "Non-Fiction", "Science", "History", "Biography", "Children", "Comics",
+                        "Mystery", "Romance", "Fantasy", "Technology", "Self-Help", "Education", "Poetry", "Art",
+                        "Travel", "Health", "Religion", "Business" });
         categoryCombo.setSelectedItem(category);
 
         // Add components to dialog
@@ -250,39 +278,8 @@ public class ManageBooksPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
-
-        saveButton.addActionListener(e -> {
-            try {
-                int newQuantity = Integer.parseInt(quantityField.getText());
-                int difference = newQuantity - totalCopies;
-
-                String sql = "UPDATE books SET title=?, author=?, isbn=?, quantity=?, available_quantity=available_quantity+?, category=? WHERE id=?";
-
-                try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                    pstmt.setString(1, titleField.getText());
-                    pstmt.setString(2, authorField.getText());
-                    pstmt.setString(3, isbnField.getText());
-                    pstmt.setInt(4, newQuantity);
-                    pstmt.setInt(5, difference);
-                    pstmt.setString(6, (String) categoryCombo.getSelectedItem());
-                    pstmt.setInt(7, bookId);
-
-                    pstmt.executeUpdate();
-                    JOptionPane.showMessageDialog(dialog, "Book updated successfully!");
-                    dialog.dispose();
-                    loadBooks();
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Please enter a valid quantity!");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Error updating book: " + ex.getMessage());
-            }
-        });
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-
+        com.library.views.panels.ModernButtonStyler.style(saveButton);
+        com.library.views.panels.ModernButtonStyler.style(cancelButton);
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
 
