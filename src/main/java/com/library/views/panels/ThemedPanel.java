@@ -28,12 +28,7 @@ public class ThemedPanel extends JPanel {
 
         if (showGoBack) {
             JButton goBackBtn = new JButton("← Go Back");
-            goBackBtn.setFocusPainted(false);
-            goBackBtn.setFont(new Font("Arial", Font.BOLD, 14));
-            goBackBtn.setBackground(new Color(247, 202, 220));
-            goBackBtn.setForeground(new Color(60, 60, 60));
-            goBackBtn.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-            goBackBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            com.library.views.panels.ModernButtonStyler.style(goBackBtn);
             goBackBtn.addActionListener(e -> firePropertyChange("navigate", null, "GoBack"));
             navBar.add(goBackBtn);
             navBar.add(Box.createHorizontalStrut(10));
@@ -47,14 +42,10 @@ public class ThemedPanel extends JPanel {
 
         for (String nav : navItems) {
             JButton btn = new JButton(nav);
-            btn.setFocusPainted(false);
-            btn.setFont(new Font("Arial", Font.BOLD, 14));
-            btn.setBackground(new Color(247, 202, 220));
-            btn.setForeground(nav.equals(activePage) ? new Color(0, 0, 0) : new Color(60, 60, 60));
-            btn.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            if (nav.equals(activePage))
-                btn.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60), 2));
+            boolean isActive = nav.equals(activePage);
+            Color highlight = isActive ? new Color(220, 200, 255, 120) : null; // pastel purple highlight
+            com.library.views.panels.ModernButtonStyler.style(btn, isActive, highlight);
+            btn.setForeground(isActive ? new Color(0, 0, 0) : new Color(60, 60, 60));
             btn.addActionListener(e -> firePropertyChange("navigate", null, nav));
             navBar.add(btn);
             navBar.add(Box.createHorizontalStrut(10));
@@ -64,6 +55,13 @@ public class ThemedPanel extends JPanel {
         navBar.add(new JLabel("\u25A0")); // Placeholder icon
         navBar.add(Box.createHorizontalStrut(10));
         navBar.add(new JLabel("\u25A0")); // Placeholder icon
+
+        // Add Logout button at the end
+        JButton logoutBtn = new JButton("Logout");
+        com.library.views.panels.ModernButtonStyler.style(logoutBtn);
+        logoutBtn.addActionListener(e -> firePropertyChange("navigate", null, "Logout"));
+        navBar.add(Box.createHorizontalStrut(10));
+        navBar.add(logoutBtn);
 
         add(navBar, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);

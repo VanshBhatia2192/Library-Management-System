@@ -47,6 +47,9 @@ public class LibrarianDashboard extends BaseDashboard {
             case "GoBack":
                 showHomePanel();
                 break;
+            case "Logout":
+                handleLogout();
+                break;
         }
     }
 

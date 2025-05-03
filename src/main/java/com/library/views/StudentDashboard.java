@@ -57,6 +57,9 @@ public class StudentDashboard extends BaseDashboard {
             case "GoBack":
                 showHomePanel();
                 break;
+            case "Logout":
+                handleLogout();
+                break;
         }
     }
 
