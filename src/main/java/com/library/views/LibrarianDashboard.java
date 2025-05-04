@@ -2,13 +2,13 @@ package com.library.views;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.table.DefaultTableModel;
 import com.library.views.panels.ManageBooksPanel;
 import com.library.views.panels.StudentRecordsPanel;
 
 public class LibrarianDashboard extends BaseDashboard {
     private String username;
-    private static final String[] NAV_ITEMS = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices",
-            "View Requests", "Profile" };
+    private static final String[] NAV_ITEMS = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices", "View Requests", "View Fines", "Profile" };
 
     public LibrarianDashboard(String username) {
         super("Librarian Dashboard", username, "LIBRARIAN");
@@ -43,6 +43,9 @@ public class LibrarianDashboard extends BaseDashboard {
                 break;
             case "View Requests":
                 showViewRequestsPanel();
+                break;
+            case "View Fines":
+                showViewFinesPanel();
                 break;
             case "Profile":
                 showProfilePanel();
@@ -253,6 +256,98 @@ public class LibrarianDashboard extends BaseDashboard {
                 "LIBRARIAN", NAV_ITEMS, "View Requests", true, wrapped);
         themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
         showContent(themed);
+    }
+
+    private void showViewFinesPanel() {
+        JPanel panel = createViewFinesPanel();
+        com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
+                "LIBRARIAN", NAV_ITEMS, "View Fines", true, panel);
+        themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
+        showContent(themed);
+    }
+
+    private JPanel createViewFinesPanel() {
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        
+        // Header section
+        JLabel heading = new JLabel("View Student Fines");
+        heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
+        heading.setForeground(new Color(60, 60, 60));
+        JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headingPanel.setOpaque(false);
+        headingPanel.add(heading);
+        inner.add(headingPanel, BorderLayout.NORTH);
+
+        // Table for fines
+        String[] columns = { "Student Name", "Book Title", "Due Date", "Days Overdue", "Fine Amount (₹)" };
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable finesTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(finesTable);
+        inner.add(scrollPane, BorderLayout.CENTER);
+
+        // Modern action bar
+        JPanel actionPanel = new JPanel(new BorderLayout());
+        actionPanel.setOpaque(false);
+        actionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Total fines label
+        JLabel totalFinesLabel = new JLabel("Total Outstanding Fines: ₹0.00");
+        totalFinesLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        totalFinesLabel.setForeground(new Color(60, 60, 60));
+        actionPanel.add(totalFinesLabel, BorderLayout.WEST);
+
+        inner.add(actionPanel, BorderLayout.SOUTH);
+
+        // Load fines data
+        Runnable loadFines = () -> {
+            tableModel.setRowCount(0);
+            double totalFines = 0.0;
+            try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
+                String sql = "SELECT u.username, b.title, bt.due_date, " +
+                           "GREATEST(0, DATEDIFF(CURRENT_DATE, bt.due_date)) as days_overdue " +
+                           "FROM book_transactions bt " +
+                           "JOIN books b ON bt.book_id = b.id " +
+                           "JOIN users u ON bt.user_id = u.id " +
+                           "WHERE bt.status IN ('BORROWED', 'OVERDUE') " +
+                           "AND CURRENT_DATE > bt.due_date " +
+                           "ORDER BY u.username, bt.due_date";
+                
+                try (java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            int daysOverdue = rs.getInt("days_overdue");
+                            double fineAmount = daysOverdue * 20.0; // ₹20 per day
+                            totalFines += fineAmount;
+
+                            Object[] row = {
+                                rs.getString("username"),
+                                rs.getString("title"),
+                                rs.getDate("due_date"),
+                                daysOverdue,
+                                String.format("%.2f", fineAmount)
+                            };
+                            tableModel.addRow(row);
+                        }
+                    }
+                }
+                // Update total fines label
+                totalFinesLabel.setText(String.format("Total Outstanding Fines: ₹%.2f", totalFines));
+            } catch (java.sql.SQLException ex) {
+                JOptionPane.showMessageDialog(inner, "Error loading fines: " + ex.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        // Initial load
+        loadFines.run();
+
+        return new com.library.views.panels.ModernCardPanel(inner);
     }
 
     @Override

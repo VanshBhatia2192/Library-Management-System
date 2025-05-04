@@ -10,10 +10,8 @@ public class StudentDashboard extends BaseDashboard {
     private JButton viewStatusButton;
     private JButton requestNewBooksButton;
     private JButton reissueBooksButton;
-    private JButton notificationsButton;
 
-    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications",
-            "Profile" };
+    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Reissue", "Request", "Status", "View Fine", "Profile" };
 
     public StudentDashboard(String currentUser) {
         super("Student Dashboard - Library Management System", currentUser, "STUDENT");
@@ -49,8 +47,8 @@ public class StudentDashboard extends BaseDashboard {
             case "Status":
                 showViewStatusPanel();
                 break;
-            case "Notifications":
-                showNotificationsPanel();
+            case "View Fine":
+                showViewFinePanel();
                 break;
             case "Profile":
                 showProfilePanel();
@@ -700,18 +698,20 @@ public class StudentDashboard extends BaseDashboard {
         return new com.library.views.panels.ModernCardPanel(inner);
     }
 
-    private void showNotificationsPanel() {
-        JPanel panel = createNotificationsPanel();
+    private void showViewFinePanel() {
+        JPanel panel = createViewFinePanel();
         com.library.views.panels.ThemedPanel themed = new com.library.views.panels.ThemedPanel(
-                "STUDENT", NAV_ITEMS, "Notifications", true, panel);
+                "STUDENT", NAV_ITEMS, "View Fine", true, panel);
         themed.addPropertyChangeListener("navigate", evt -> handleNav((String) evt.getNewValue()));
         showContent(themed);
     }
 
-    private JPanel createNotificationsPanel() {
+    private JPanel createViewFinePanel() {
         JPanel inner = new JPanel(new BorderLayout());
         inner.setOpaque(false);
-        JLabel heading = new JLabel("Notifications");
+        
+        // Header section
+        JLabel heading = new JLabel("View Fines");
         heading.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
         heading.setForeground(new Color(60, 60, 60));
         JPanel headingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -719,12 +719,138 @@ public class StudentDashboard extends BaseDashboard {
         headingPanel.add(heading);
         inner.add(headingPanel, BorderLayout.NORTH);
 
-        // TODO: Implement notifications functionality
-        JLabel label = new JLabel("Notifications Panel - Coming Soon");
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        inner.add(label, BorderLayout.CENTER);
+        // Table for fines
+        String[] columns = { "Book Title", "Due Date", "Days Overdue", "Fine Amount (₹)" };
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable finesTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(finesTable);
+        inner.add(scrollPane, BorderLayout.CENTER);
+
+        // Modern action bar (similar to other panels)
+        JPanel actionPanel = new JPanel(new BorderLayout());
+        actionPanel.setOpaque(false);
+        actionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Total fine label
+        JLabel totalFineLabel = new JLabel("Total Fine: ₹0.00");
+        totalFineLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        totalFineLabel.setForeground(new Color(60, 60, 60));
+        actionPanel.add(totalFineLabel, BorderLayout.WEST);
+
+        // Pay button styled like other action buttons in the app
+        JButton payButton = new JButton("Pay Total Fine");
+        payButton.setFont(new Font("Arial", Font.BOLD, 16));
+        payButton.setBackground(new Color(34, 87, 126));
+        payButton.setForeground(Color.WHITE);
+        payButton.setFocusPainted(false);
+        payButton.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        payButton.setEnabled(false); // Initially disabled
+        actionPanel.add(payButton, BorderLayout.EAST);
+
+        inner.add(actionPanel, BorderLayout.SOUTH);
+
+        // Load fines data
+        Runnable loadFines = () -> {
+            tableModel.setRowCount(0);
+            double totalFine = 0.0;
+            try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
+                int userId = getUserId(conn, currentUser);
+                try (java.sql.PreparedStatement pstmt = conn.prepareStatement(
+                        "SELECT b.title, bt.due_date, bt.status " +
+                        "FROM book_transactions bt " +
+                        "JOIN books b ON bt.book_id = b.id " +
+                        "WHERE bt.user_id = ? AND bt.status IN ('BORROWED', 'OVERDUE')")) {
+                    pstmt.setInt(1, userId);
+                    try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            java.util.Date dueDate = rs.getDate("due_date");
+                            java.util.Date currentDate = new java.util.Date();
+                            long daysOverdue = 0;
+                            double fineAmount = 0.0;
+
+                            if (currentDate.after(dueDate)) {
+                                long diffInMillies = currentDate.getTime() - dueDate.getTime();
+                                daysOverdue = diffInMillies / (24 * 60 * 60 * 1000);
+                                fineAmount = daysOverdue * 20.0; // ₹20 per day
+                                totalFine += fineAmount;
+                            }
+
+                            Object[] row = {
+                                rs.getString("title"),
+                                dueDate,
+                                daysOverdue,
+                                String.format("%.2f", fineAmount)
+                            };
+                            tableModel.addRow(row);
+                        }
+                    }
+                }
+                // Update total fine label and enable/disable pay button
+                totalFineLabel.setText(String.format("Total Fine: ₹%.2f", totalFine));
+                payButton.setEnabled(totalFine > 0);
+            } catch (java.sql.SQLException ex) {
+                JOptionPane.showMessageDialog(inner, "Error loading fines: " + ex.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        // Add pay button action
+        payButton.addActionListener(e -> {
+            double totalFine = Double.parseDouble(totalFineLabel.getText().replaceAll("[^0-9.]", ""));
+            int choice = JOptionPane.showConfirmDialog(
+                inner,
+                String.format("Are you sure you want to pay ₹%.2f?", totalFine),
+                "Confirm Payment",
+                JOptionPane.YES_NO_OPTION
+            );
+
+            if (choice == JOptionPane.YES_OPTION) {
+                try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
+                    int userId = getUserId(conn, currentUser);
+                    // Update all overdue transactions to mark fines as paid
+                    try (java.sql.PreparedStatement pstmt = conn.prepareStatement(
+                            "UPDATE book_transactions SET status = 'BORROWED', fine = 0 " +
+                            "WHERE user_id = ? AND status = 'OVERDUE'")) {
+                        pstmt.setInt(1, userId);
+                        pstmt.executeUpdate();
+                    }
+                    JOptionPane.showMessageDialog(inner,
+                            "Payment successful! Your fines have been cleared.",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadFines.run(); // Refresh the table
+                } catch (java.sql.SQLException ex) {
+                    JOptionPane.showMessageDialog(inner,
+                            "Error processing payment: " + ex.getMessage(),
+                            "Database Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Initial load
+        loadFines.run();
 
         return new com.library.views.panels.ModernCardPanel(inner);
+    }
+
+    private int getUserId(java.sql.Connection conn, String username) {
+        try (java.sql.PreparedStatement userStmt = conn.prepareStatement("SELECT id FROM users WHERE username = ?")) {
+            userStmt.setString(1, username);
+            try (java.sql.ResultSet rs = userStmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        } catch (java.sql.SQLException ex) {
+            ex.printStackTrace();
+        }
+        return -1;
     }
 
     @Override
