@@ -42,7 +42,8 @@ public class HomePanel extends JPanel {
 
         // Navigation buttons (customize per role)
         String[] studentNav = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications", "Profile" };
-        String[] librarianNav = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices", "View Requests", "Profile" };
+        String[] librarianNav = { "Manage Books", "Issued Books", "Student Records", "Overdue Notices", "View Requests",
+                "Profile" };
         String[] adminNav = { "Manage Librarians", "Reports", "Fine Mgmt", "User Mgmt", "Profile" };
         String[] navItems = userRole.equals("ADMIN") ? adminNav
                 : userRole.equals("LIBRARIAN") ? librarianNav : studentNav;
@@ -53,6 +54,13 @@ public class HomePanel extends JPanel {
             navBar.add(btn);
             navBar.add(Box.createHorizontalStrut(10));
         }
+
+        // Add Logout button to navBar
+        JButton logoutBtn = new JButton("Logout");
+        com.library.views.panels.ModernButtonStyler.style(logoutBtn);
+        logoutBtn.addActionListener(e -> firePropertyChange("navigate", null, "Logout"));
+        navBar.add(Box.createHorizontalStrut(10));
+        navBar.add(logoutBtn);
 
         // Placeholder for social icons (right side)
         navBar.add(Box.createHorizontalGlue());
@@ -83,10 +91,6 @@ public class HomePanel extends JPanel {
         centerPanel.add(subtitle, gbc);
 
         gbc.gridy++;
-        JButton cta = new JButton("Get Started");
-        com.library.views.panels.ModernButtonStyler.style(cta);
-        centerPanel.add(cta, gbc);
-
         // Placeholders for character images
         gbc.gridy = 1;
         gbc.gridx = 0;

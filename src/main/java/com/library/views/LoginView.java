@@ -221,6 +221,11 @@ public class LoginView extends JFrame {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     String storedPassword = rs.getString("password");
+                    // For admin, check password directly without hashing
+                    if (role.equals("ADMIN")) {
+                        return password.equals(storedPassword);
+                    }
+                    // For other roles, verify with hashed password
                     return PasswordUtils.verifySecurePassword(password, storedPassword);
                 }
             }

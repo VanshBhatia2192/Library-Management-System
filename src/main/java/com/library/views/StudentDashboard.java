@@ -12,7 +12,8 @@ public class StudentDashboard extends BaseDashboard {
     private JButton reissueBooksButton;
     private JButton notificationsButton;
 
-    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications", "Profile" };
+    private static final String[] NAV_ITEMS = { "Borrow", "Return", "Reissue", "Request", "Status", "Notifications",
+            "Profile" };
 
     public StudentDashboard(String currentUser) {
         super("Student Dashboard - Library Management System", currentUser, "STUDENT");
@@ -75,11 +76,8 @@ public class StudentDashboard extends BaseDashboard {
     }
 
     private JPanel createProfilePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createHeaderPanel("Edit Profile"), BorderLayout.NORTH);
-        JLabel label = new JLabel("Profile editing coming soon.", SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
-        return new com.library.views.panels.ModernCardPanel(panel);
+        return new com.library.views.panels.ModernCardPanel(
+                new com.library.views.panels.ProfilePanel(currentUser, userRole));
     }
 
     private void showBorrowBooksPanel() {
@@ -682,7 +680,8 @@ public class StudentDashboard extends BaseDashboard {
 
             try (java.sql.Connection conn = com.library.utils.DatabaseConnection.getInstance().getConnection()) {
                 // Update the transaction with new due date and reissue status
-                java.sql.Timestamp newDueDate = new java.sql.Timestamp(System.currentTimeMillis() + 14L * 24 * 60 * 60 * 1000); // 14 days
+                java.sql.Timestamp newDueDate = new java.sql.Timestamp(
+                        System.currentTimeMillis() + 14L * 24 * 60 * 60 * 1000); // 14 days
                 try (java.sql.PreparedStatement updateStmt = conn.prepareStatement(
                         "UPDATE book_transactions SET due_date = ?, transaction_type = 'REISSUE' WHERE id = ?")) {
                     updateStmt.setTimestamp(1, newDueDate);

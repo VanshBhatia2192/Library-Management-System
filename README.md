@@ -30,33 +30,27 @@ A comprehensive Java-based Library Management System with GUI that allows effici
 ## Technical Requirements
 - Java JDK 17 or higher
 - MySQL Database
-- Maven for dependency management
 
-## Setup Instructions
-1. Clone the repository
-2. Configure the database connection in `src/main/resources/database.properties`
-3. Run `mvn clean install` to build the project
-4. Execute the main class `com.library.MainApplication`
 
 ## Project Structure
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── library/
-│   │           ├── controllers/
-│   │           ├── models/
-│   │           ├── views/
-│   │           ├── utils/
-│   │           └── database/
-│   └── resources/
-└── test/
-    └── java/
-        └── com/
-            └── library/
-```
-
+├── bin
+│   └── com
+│       └── library
+│           ├── models
+│           ├── utils
+│           └── views
+│               └── panels
+├── lib
+└── src
+    └── main
+        ├── java
+        │   └── com
+        │       └── library
+        │           ├── models
+        │           ├── utils
+        │           └── views
+        │               └── panels
+        └── resources
 ## Contributing
 Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 

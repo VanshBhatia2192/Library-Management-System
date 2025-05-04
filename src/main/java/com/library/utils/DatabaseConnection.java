@@ -62,13 +62,31 @@ public class DatabaseConnection {
         try {
             System.out.println("Initializing connection pool...");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            for (int i = 0; i < poolSize; i++) {
-                Connection conn = createConnection();
-                if (conn != null) {
-                    connectionPool.offer(conn);
-                }
+
+            // Create first connection immediately
+            Connection firstConn = createConnection();
+            if (firstConn != null) {
+                connectionPool.offer(firstConn);
+                System.out.println("Initial connection created. System is ready to use.");
             }
-            System.out.println("Connection pool initialized successfully with " + poolSize + " connections");
+
+            // Create remaining connections in background
+            new Thread(() -> {
+                try {
+                    for (int i = 1; i < poolSize; i++) {
+                        Connection conn = createConnection();
+                        if (conn != null) {
+                            connectionPool.offer(conn);
+                            System.out.println("Background connection " + i + " created");
+                        }
+                        Thread.sleep(100); // Small delay between connections
+                    }
+                    System.out.println("Connection pool fully initialized with " + poolSize + " connections");
+                } catch (Exception e) {
+                    System.err.println("Error creating background connections: " + e.getMessage());
+                }
+            }).start();
+
         } catch (ClassNotFoundException e) {
             System.err.println("MySQL JDBC Driver not found: " + e.getMessage());
             throw new SQLException("MySQL JDBC Driver not found", e);
